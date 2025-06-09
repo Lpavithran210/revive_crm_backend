@@ -117,35 +117,36 @@ export const updateStudent = async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        if (status === 'Follow up' && (!note || note.trim() === '' || !follow_up_date || isNaN(new Date(follow_up_date).getTime()))) {
-            return res.status(400).json({ message: 'Note and follow-up date are required!' });
+        if (status === 'Follow up') {
+            if (!note?.trim() || !follow_up_date || isNaN(new Date(follow_up_date).getTime())) {
+                return res.status(400).json({ message: 'Note and follow-up date are required!' });
+            }
         }
 
-        const statusChanged = status && status !== student.status;
-        const attenderChanged = attender && attender !== student.attender;
+        const shouldUpdateHistory = 
+            (status && status !== student.status) ||
+            (attender && attender !== student.attender) ||
+            note ||
+            follow_up_date;
 
-        if (statusChanged || attenderChanged || note || follow_up_date) {
-            const historyEntry = {
+        if (shouldUpdateHistory) {
+            student.history = student.history || [];
+            student.history.push({
                 updated_at: new Date(),
                 status: student.status,
                 attender: student.attender,
                 note: note,
                 follow_up_date: follow_up_date ? new Date(follow_up_date) : undefined
-            };
-
-            student.history = student.history || [];
-            student.history.push(historyEntry);
+            });
         }
 
         if (amount && payment_mode) {
-            const paymentEntry = {
+            student.payments = student.payments || [];
+            student.payments.push({
                 paid_amount: Number(amount),
                 payment_mode,
                 payment_date: new Date(),
-            };
-
-            student.payments = student.payments || [];
-            student.payments.push(paymentEntry);
+            });
 
             const totalPaid = student.payments.reduce((sum, payment) => sum + payment.paid_amount, 0);
             student.course_fee = Number(course_fee || student.course_fee);
@@ -153,19 +154,19 @@ export const updateStudent = async (req, res) => {
 
             if (student.balance_amount === 0) {
                 student.payment_status = 'Fully Paid';
-            } else if (student.payments && student.payments.length > 0 && student.balance_amount > 0) {
+            } else if (student.balance_amount > 0 && totalPaid > 0) {
                 student.payment_status = 'Partially Paid';
             } else {
                 student.payment_status = 'Unpaid';
             }
-
-            student.status = status || student.status;
-            student.attender = attender || student.attender;
-
-            const updatedStudent = await student.save();
-            res.json(updatedStudent);
-
         }
+
+        if (status) student.status = status;
+        if (attender) student.attender = attender;
+
+        const updatedStudent = await student.save();
+        res.json(updatedStudent);
+
     } catch (error) {
         console.error('Error updating student:', error);
         res.status(500).json({ message: 'Error updating student', error: error.message });
