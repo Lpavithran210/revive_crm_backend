@@ -62,6 +62,7 @@ const studentEnquirySchema = new mongoose.Schema({
       payment_date: { type: Date, default: Date.now }
     }
   ],
+  course_fee: { type: Number },
   balance_amount: { type: Number },
   next_due_date: { type: Date },
   payment_status: {

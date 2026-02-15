@@ -177,11 +177,11 @@ export const updateStudent = async (req, res) => {
 export const createStudent = async (req, res) => {
     console.log(req.body)
     try {
-        const { name, phone, course, are_you, currently_working_in, learning_mode, source, status, attender } = req.body;
-        await StudentModel.create({ name, phone, course, are_you, currently_working_in, learning_mode, source, status, attender });
-        res.status(200).json({ message: 'Students created successfully' });
+        const { name, phone, course, course_fee, are_you, currently_working_in, learning_mode, source, status, attender, follow_up_date, note, payments = [], paid_amount = 0, balance_amount = 0, payment_status = "Unpaid" } = req.body;
+        const student = await StudentModel.create({ name, phone, course, course_fee, are_you, currently_working_in, learning_mode, source, status, attender, follow_up_date, note, payments, paid_amount, balance_amount, payment_status });
+        res.status(201).json({ message: 'Students created successfully', student });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to create' });
+        console.error("Create student error:", error);
+        res.status(500).json({ error: 'Failed to create student' });
     }
 };
