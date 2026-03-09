@@ -232,7 +232,9 @@ export const updateStudent = async (req, res) => {
 export const createStudent = async (req, res) => {
     try {
 
-        if (req.headers['x-api-key'] !== process.env.N8N_SECRET) {
+        const apiKey = req.headers['x-api-key'];
+
+        if (!req.user && apiKey !== process.env.N8N_SECRET) {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
