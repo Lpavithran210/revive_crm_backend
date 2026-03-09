@@ -7,6 +7,8 @@ const router = express.Router()
 
 router.post('/upload-students', protect, authorizeRoles('admin'), uploadStudents)
 
+router.post('/automation/create-student', createStudent)
+
 router.post('/create-student', protect, authorizeRoles('admin'), createStudent)
 
 router.get('/enquiries', protect, getEnquiries)

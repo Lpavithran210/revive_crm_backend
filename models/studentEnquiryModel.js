@@ -10,25 +10,20 @@ const studentEnquirySchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    unique: true
+  },
+  qualification: {
+    type: String,
+    trim: true
   },
   course: {
     type: String,
     required: true,
     trim: true,
   },
-  are_you: {
+  city: {
     type: String,
-    enum: ['Fresher', 'Experienced'],
-    required: true,
-  },
-  currently_working_in: {
-    type: String,
-    enum: ['IT', 'Non IT'],
-  },
-  learning_mode: {
-    type: String,
-    enum: ['Online', 'Offline'],
-    required: true,
+    trim: true
   },
   source: {
     type: String,
@@ -43,13 +38,13 @@ const studentEnquirySchema = new mongoose.Schema({
   },
   attender: {
     type: String,
-    default: undefined
+    default: "Unassigned"
   },
   history: [
     {
       updated_at: { type: Date, default: Date.now },
       status: { type: String, enum: ['Pending', 'Follow up', 'Loss', 'Success'] },
-      attender: { type: String },
+      attender: { type: String, default: "Unassigned" },
       note: { type: String, trim: true },
       follow_up_date: { type: Date },
       reminder_sent: { type: Boolean, default: false }
@@ -71,12 +66,26 @@ const studentEnquirySchema = new mongoose.Schema({
     default: 'Unpaid'
   }
 }, {
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  timestamps: true
 });
 
-studentEnquirySchema.index({ updated_at: 1 });
 studentEnquirySchema.index({ "history.updated_at": 1 });
 studentEnquirySchema.index({ "history.follow_up_date": 1 });
+studentEnquirySchema.pre('save', function (next) {
+
+  if (this.isNew) {
+    this.history.push({
+      status: this.status || "Pending",
+      attender: this.attender,
+      note: "Enquiry Created",
+      follow_up_date: this.follow_up_date,
+      updated_at: new Date(),
+      reminder_sent: false
+    });
+  }
+
+  next();
+});
 
 const StudentEnquiry = mongoose.model('StudentEnquiry', studentEnquirySchema);
 
