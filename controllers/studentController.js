@@ -290,6 +290,8 @@ export const createStudent = async (req, res) => {
             payment_status
         });
 
+        io.emit("new-enquiry", student);
+        
         res.status(201).json({
             message: "Student created successfully",
             student
