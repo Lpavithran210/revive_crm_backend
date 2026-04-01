@@ -295,9 +295,7 @@ export const createStudent = async (req, res) => {
             payment_status
         });
 
-        if (global.io) {
-            global.io.emit("new-enquiry", student);
-        }
+        io.emit("new-enquiry", student);
 
         return res.status(201).json({
             message: "Student created successfully",
