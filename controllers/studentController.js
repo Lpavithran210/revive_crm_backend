@@ -232,11 +232,17 @@ export const updateStudent = async (req, res) => {
 
 export const createStudent = async (req, res) => {
     try {
+        if (!req.user) {
+            const authHeader = req.headers.authorization;
 
-        const apiKey = req.headers['x-api-key'];
-
-        if (!req.user && apiKey !== process.env.N8N_SECRET) {
-            return res.status(401).json({ message: "Unauthorized" });
+            if (
+                !authHeader ||
+                authHeader.trim() !== `Bearer ${process.env.N8N_SECRET}`.trim()
+            ) {
+                return res.status(401).json({
+                    message: "Unauthorized - Invalid or missing token"
+                });
+            }
         }
 
         const {
@@ -257,17 +263,15 @@ export const createStudent = async (req, res) => {
             payment_status = "Unpaid"
         } = req.body;
 
-        // Required field validation
         if (!name || !phone || !course) {
             return res.status(400).json({
                 message: "Name, phone and course are required"
             });
         }
 
-        // Duplicate lead check
-        const existing = await StudentModel.findOne({ phone });
+        const existingStudent = await StudentModel.findOne({ phone });
 
-        if (existing) {
+        if (existingStudent) {
             return res.status(200).json({
                 message: "Student already exists"
             });
@@ -291,16 +295,19 @@ export const createStudent = async (req, res) => {
             payment_status
         });
 
-        io.emit("new-enquiry", student);
-        
-        res.status(201).json({
+        if (global.io) {
+            global.io.emit("new-enquiry", student);
+        }
+
+        return res.status(201).json({
             message: "Student created successfully",
             student
         });
 
     } catch (error) {
         console.error("Create student error:", error);
-        res.status(500).json({
+
+        return res.status(500).json({
             message: "Failed to create student"
         });
     }
