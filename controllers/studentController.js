@@ -251,7 +251,6 @@ export const createStudent = async (req, res) => {
             course,
             city,
             course_fee = 0,
-            learning_mode,
             source,
             status = "Pending",
             attender = "Unassigned",
@@ -261,11 +260,9 @@ export const createStudent = async (req, res) => {
             paid_amount = 0,
             balance_amount = 0,
             payment_status = "Unpaid",
-            mention_your_degree,
-            highest_educational_qualification
+            qualification = "Not Specified"
         } = req.body;
 
-        const qualification = mention_your_degree || highest_educational_qualification || "not specified";
 
         if (!name || !phone || !course) {
             return res.status(400).json({
@@ -287,7 +284,6 @@ export const createStudent = async (req, res) => {
             course,
             city,
             course_fee,
-            learning_mode,
             source,
             status,
             attender,
