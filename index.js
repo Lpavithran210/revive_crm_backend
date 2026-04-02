@@ -41,8 +41,12 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
 
 }).catch(e => console.log("Error while connecting to DB", e.message));
 
+app.get("/", (req, res) => {
+  res.send("Revive CRM Backend Running");
+});
+
 app.get("/health", (req, res) => {
-  res.status(200).send("Server is running");
+  res.status(200).send("Health check passed");
 });
 
 app.use('/api/user', userRoute)
