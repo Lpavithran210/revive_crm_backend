@@ -260,8 +260,12 @@ export const createStudent = async (req, res) => {
             payments = [],
             paid_amount = 0,
             balance_amount = 0,
-            payment_status = "Unpaid"
+            payment_status = "Unpaid",
+            mention_your_degree,
+            highest_educational_qualification
         } = req.body;
+
+        const qualification = mention_your_degree || highest_educational_qualification || "not specified";
 
         if (!name || !phone || !course) {
             return res.status(400).json({
@@ -292,7 +296,8 @@ export const createStudent = async (req, res) => {
             payments,
             paid_amount,
             balance_amount,
-            payment_status
+            payment_status,
+            qualification
         });
 
         io.emit("new-enquiry", student);
