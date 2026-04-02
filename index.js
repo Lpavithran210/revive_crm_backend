@@ -41,6 +41,10 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
 
 }).catch(e => console.log("Error while connecting to DB", e.message));
 
+app.get("/health", (req, res) => {
+  res.status(200).send("Server is running");
+});
+
 app.use('/api/user', userRoute)
 app.use('/api/course', courseRoute)
 app.use('/api', studentRoute)
