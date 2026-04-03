@@ -1,13 +1,13 @@
 import cron from 'node-cron';
 import StudentModel from './models/studentEnquiryModel.js'
-import { sendMail } from './email.js';
-import userModel from './models/userModel.js';
+import { io } from "./index.js";
 
 cron.schedule('* * * * *', async () => {
+    console.log("CRON RUNNING", new Date());
     const now = new Date();
-    const lowerBound = new Date(now.getTime() + 10 * 60 * 1000);
-    const upperBound = new Date(lowerBound.getTime() + 60 * 1000);
-
+    const lowerBound = new Date(now.getTime());
+    const upperBound = new Date(lowerBound.getTime() + 10 * 60 * 1000);
+    console.log("Searching between:", lowerBound, upperBound);
     try {
         const students = await StudentModel.find({
             history: {
@@ -21,7 +21,8 @@ cron.schedule('* * * * *', async () => {
                 }
             }
         });
-
+        console.log("Students found:", students.length);
+        
         for (const student of students) {
             let updated = false;
 
@@ -35,25 +36,17 @@ cron.schedule('* * * * *', async () => {
                     followupTime < upperBound
                 ) {
                     const attenderName = followup.attender || student.attender;
-                    const attenderUser = await userModel.findOne({ name: attenderName });
-                    if (!attenderUser) continue;
+                    console.log("EMITTING FOLLOWUP SOCKET", student.name);
+                    io.emit("followupReminder", {
+                        name: student.name,
+                        phone: student.phone,
+                        course: student.course,
+                        followupTime: followup.follow_up_date,
+                        note: followup.note,
+                        attender: attenderName
+                    });
 
-                    const htmlContent = `
-        <p>Hi ${attenderName},</p>
-        <p>This is a reminder to follow up with:</p>
-        <ul>
-          <li><strong>Name:</strong> ${student.name}</li>
-          <li><strong>Phone:</strong> ${student.phone}</li>
-          <li><strong>Course:</strong> ${student.course}</li>
-          <li><strong>Follow-up Time:</strong> ${new Date(followup.follow_up_date).toLocaleString()}</li>
-        </ul>
-        ${followup.note ? `<p><strong>Note:</strong> ${followup.note}</p>` : ''}
-        <br/>
-        <p>Regards,<br/>CRM System</p>
-      `;
-
-                    await sendMail(attenderUser.email, `🔔 Follow-up Reminder: ${student.name}`, htmlContent);
-                    console.log(`Email sent to ${attenderUser.email} for ${student.name}`);
+                    console.log(`Reminder emitted for ${student.name}`);
 
                     followup.reminder_sent = true;
                     updated = true;
