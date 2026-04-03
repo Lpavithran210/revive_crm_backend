@@ -6,11 +6,6 @@ const historySchema = new mongoose.Schema({
   attender: { type: String, default: "Unassigned" },
   note: { type: String, trim: true },
   follow_up_date: { type: Date },
-
-  // 🔥 Important flags
-  reminder_sent: { type: Boolean, default: false },
-  reminder_locked: { type: Boolean, default: false }
-
 }, { _id: true });
 
 const studentEnquirySchema = new mongoose.Schema({
@@ -77,8 +72,6 @@ const studentEnquirySchema = new mongoose.Schema({
 
 studentEnquirySchema.index({
   "history.follow_up_date": 1,
-  "history.reminder_sent": 1,
-  "history.reminder_locked": 1
 });
 
 studentEnquirySchema.pre('save', function (next) {
@@ -88,9 +81,7 @@ studentEnquirySchema.pre('save', function (next) {
       attender: this.attender,
       note: "Enquiry Created",
       follow_up_date: this.follow_up_date,
-      updated_at: new Date(),
-      reminder_sent: false,
-      reminder_locked: false
+      updated_at: new Date()
     });
   }
   next();
