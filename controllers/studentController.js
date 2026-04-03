@@ -315,7 +315,6 @@ export const createStudent = async (req, res) => {
 export const getDueFollowups = async (req, res) => {
   try {
     const now = new Date();
-    const lower = new Date(now.getTime() + 9 * 60 * 1000);
     const upper = new Date(now.getTime() + 10 * 60 * 1000);
 
     const students = await StudentModel.find({
@@ -324,19 +323,47 @@ export const getDueFollowups = async (req, res) => {
           status: "Follow up",
           reminder_sent: false,
           reminder_locked: false,
-          follow_up_date: { $gte: lower, $lte: upper }
+          follow_up_date: {
+            $gte: now,
+            $lte: upper
+          }
         }
       }
     });
 
-    res.json(students);
+    const followups = [];
+
+    students.forEach(student => {
+      student.history.forEach(entry => {
+        if (
+          entry.status === "Follow up" &&
+          !entry.reminder_sent &&
+          !entry.reminder_locked &&
+          entry.follow_up_date >= now &&
+          entry.follow_up_date <= upper
+        ) {
+          followups.push({
+            studentId: student._id,
+            followupId: entry._id,
+            name: student.name,
+            phone: student.phone,
+            course: student.course,
+            time: entry.follow_up_date,
+            note: entry.note
+          });
+        }
+      });
+    });
+
+    console.log("FOLLOWUPS FOUND:", followups.length);
+
+    res.json(followups);
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error fetching followups" });
   }
 };
-
 
 export const lockReminder = async (req, res) => {
   try {
