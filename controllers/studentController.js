@@ -1,5 +1,6 @@
 import { io } from "../index.js";
 import StudentModel from "../models/studentEnquiryModel.js";
+import { formatStudentToIST } from "../utils/time.js";
 
 const extractCourseName = (formName) => {
     if (!formName) return '';
@@ -295,12 +296,12 @@ export const createStudent = async (req, res) => {
             payment_status,
             qualification
         });
-
-        io.emit("new-enquiry", student);
-
+        console.log("New enquiry created:", formatStudentToIST(student));
+        io.emit("new-enquiry", formatStudentToIST(student));
+        console.log("Emitted new enquiry event for student:", formatStudentToIST(student));
         return res.status(201).json({
             message: "Student created successfully",
-            student
+            student: formatStudentToIST(student)
         });
 
     } catch (error) {
