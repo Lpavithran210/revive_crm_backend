@@ -1,3 +1,4 @@
+import moment from "moment-timezone";
 import { io } from "../index.js";
 import StudentModel from "../models/studentEnquiryModel.js";
 import { formatStudentToIST } from "../utils/time.js";
@@ -101,16 +102,20 @@ export const getEnquiries = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
 
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
+        const start = moment.tz(startDate, "Asia/Kolkata")
+        .startOf("day")
+        .utc()
+        .toDate();
 
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
+        const end = moment.tz(endDate, "Asia/Kolkata")
+        .endOf("day")
+        .utc()
+        .toDate();
 
         const enquiries = await StudentModel.find({
             $or: [
                 { updatedAt: { $gte: start, $lte: end } },
-                { history: { $elemMatch: { updatedAt: { $gte: start, $lte: end } } } }
+                { history: { $elemMatch: { updated_at: { $gte: start, $lte: end } } } }
             ]
         });
 
@@ -123,7 +128,7 @@ export const getEnquiries = async (req, res) => {
 
             // Check history dates
             return student.history?.some(entry => {
-                const historyDate = new Date(entry.updatedAt);
+                const historyDate = new Date(entry.updated_at);
                 return historyDate >= start && historyDate <= end;
             });
         });
