@@ -99,45 +99,37 @@ export const uploadStudents = async (req, res) => {
 };
 
 export const getEnquiries = async (req, res) => {
-    try {
-        const { startDate, endDate } = req.query;
+  try {
+    const { startDate, endDate } = req.query;
 
-        const start = moment.tz(startDate, "Asia/Kolkata")
+     const start = moment.tz(startDate, "Asia/Kolkata")
         .startOf("day")
         .utc()
         .toDate();
 
-        const end = moment.tz(endDate, "Asia/Kolkata")
+    const end = moment.tz(endDate, "Asia/Kolkata")
         .endOf("day")
         .utc()
         .toDate();
 
-        const enquiries = await StudentModel.find({
-            $or: [
-                { updatedAt: { $gte: start, $lte: end } },
-                { history: { $elemMatch: { updated_at: { $gte: start, $lte: end } } } }
-            ]
-        });
+    const enquiries = await StudentModel.find();
+    const filtered = enquiries.filter(student => {
+      if (!student.history || student.history.length === 0) return false;
+      const latestHistory = student.history.reduce((latest, current) => {
+        return new Date(current.updated_at) > new Date(latest.updated_at)
+          ? current
+          : latest;
+      });
+      const latestDate = new Date(latestHistory.updated_at);
+      return latestDate >= start && latestDate <= end;
+    });
 
-        // 2. Filter by main updated_at or any history.updated_at
-        const filteredEnquiries = enquiries.filter(student => {
-            const mainUpdated = new Date(student.updatedAt);
-            if (mainUpdated >= start && mainUpdated <= end) {
-                return true;
-            }
+    res.json(filtered);
 
-            // Check history dates
-            return student.history?.some(entry => {
-                const historyDate = new Date(entry.updated_at);
-                return historyDate >= start && historyDate <= end;
-            });
-        });
-
-        res.json(filteredEnquiries);
-    } catch (error) {
-        console.error('Error fetching enquiries by date:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
+  } catch (error) {
+    console.error("Error fetching enquiries:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 };
 
 export const updateStudent = async (req, res) => {
