@@ -78,6 +78,7 @@ studentEnquirySchema.pre('save', function (next) {
       status: this.status || "Pending",
       attender: this.attender,
       note: "Enquiry Created",
+      course: this.course,
       follow_up_date: this.follow_up_date,
       updated_at: new Date(),
       reminder_sent: false
