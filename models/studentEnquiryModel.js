@@ -46,7 +46,7 @@ const studentEnquirySchema = new mongoose.Schema({
       status: { type: String, enum: ['Pending', 'Follow up', 'Loss', 'Success'] },
       attender: { type: String, default: "Unassigned" },
       note: { type: String, trim: true },
-      follow_up_date: { type: Date },
+      course: { type: String, trim: true },
       reminder_sent: { type: Boolean, default: false }
     }
   ],

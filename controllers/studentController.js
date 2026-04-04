@@ -55,6 +55,7 @@ export const uploadStudents = async (req, res) => {
             attender: "Unassigned",
             note: "Enquiry Created",
             updated_at: new Date(),
+            course: student.course,
             reminder_sent: false
         }
       ],
@@ -134,7 +135,7 @@ export const getEnquiries = async (req, res) => {
 
 export const updateStudent = async (req, res) => {
     const studentId = req.params.id;
-    const { status, attender, note, follow_up_date, course_fee, amount, payment_mode } = req.body;
+    const { status, attender, note, follow_up_date, course_fee, amount, payment_mode, course } = req.body;
 
     try {
 
@@ -156,13 +157,14 @@ export const updateStudent = async (req, res) => {
         // Update main fields first
         if (status) student.status = status;
         if (attender) student.attender = attender;
-
+        if (course) student.course = course;
         // Add history entry
         const shouldUpdateHistory =
             status ||
             attender ||
             note ||
-            follow_up_date;
+            follow_up_date ||
+            course;
 
         if (shouldUpdateHistory) {
 
@@ -173,7 +175,8 @@ export const updateStudent = async (req, res) => {
                 status: student.status,
                 attender: student.attender,
                 note: note || "Lead updated",
-                follow_up_date: follow_up_date ? new Date(follow_up_date) : null
+                follow_up_date: follow_up_date ? new Date(follow_up_date) : null,
+                course: student.course
             });
 
         }
