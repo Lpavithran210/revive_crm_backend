@@ -40,11 +40,21 @@ const studentEnquirySchema = new mongoose.Schema({
     type: String,
     default: "Unassigned"
   },
+  attenderId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null
+},
   history: [
     {
       updated_at: { type: Date, default: Date.now },
       status: { type: String, enum: ['Pending', 'Follow up', 'Loss', 'Success'] },
       attender: { type: String, default: "Unassigned" },
+      attenderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
       note: { type: String, trim: true },
       course: { type: String, trim: true },
       follow_up_date: { type: Date },
@@ -78,6 +88,7 @@ studentEnquirySchema.pre('save', function (next) {
     this.history.push({
       status: this.status || "Pending",
       attender: this.attender,
+      attenderId: this.attenderId,
       note: "Enquiry Created",
       course: this.course,
       follow_up_date: this.follow_up_date,

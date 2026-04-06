@@ -12,12 +12,16 @@ cron.schedule('* * * * *', async () => {
     console.log("Searching between:", lowerBound, upperBound);
     try {
         const students = await StudentModel.find({
-            "history.follow_up_date": {
+        history: {
+            $elemMatch: {
+            follow_up_date: {
                 $gte: lowerBound,
                 $lt: upperBound
             },
-            "history.status": "Follow up",
-            "history.reminder_sent": { $ne: true }
+            status: "Follow up",
+            reminder_sent: { $ne: true }
+            }
+        }
         });
         console.log("Students found:", students.length);
 
@@ -34,15 +38,20 @@ cron.schedule('* * * * *', async () => {
                     followupTime >= lowerBound &&
                     followupTime < upperBound
                 ) {
-                    const attenderId = followup.attender || student.attender;
+                    const attenderId = followup.attenderId || student.attenderId;
+                    const attenderName = followup.attender || student.attender;
+
+                    if (!attenderId) continue;
+
                     console.log("EMITTING TO", attenderId);
-                    io.to(attenderId).emit("followupReminder", {
+                    io.to(attenderId.toString()).emit("followupReminder", {
                         name: student.name,
                         phone: student.phone,
                         course: student.course,
                         followupTime: followup.follow_up_date,
                         note: followup.note,
-                        attender: attenderId
+                        attenderId: attenderId,
+                        attender: attenderName
                     });
 
                     followup.reminder_sent = true;
