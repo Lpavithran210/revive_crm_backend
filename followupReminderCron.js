@@ -34,15 +34,15 @@ cron.schedule('* * * * *', async () => {
                     followupTime >= lowerBound &&
                     followupTime < upperBound
                 ) {
-                    const attenderName = followup.attender || student.attender;
-                    console.log("EMITTING FOLLOWUP SOCKET", student.name);
-                    io.emit("followupReminder", {
+                    const attenderId = followup.attender || student.attender;
+                    console.log("EMITTING TO", attenderId);
+                    io.to(attenderId).emit("followupReminder", {
                         name: student.name,
                         phone: student.phone,
                         course: student.course,
                         followupTime: followup.follow_up_date,
                         note: followup.note,
-                        attender: attenderName
+                        attender: attenderId
                     });
 
                     followup.reminder_sent = true;

@@ -27,6 +27,11 @@ export { io };
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
+  socket.on("registerUser", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined room`);
+  });
+
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
