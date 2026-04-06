@@ -47,6 +47,7 @@ const studentEnquirySchema = new mongoose.Schema({
       attender: { type: String, default: "Unassigned" },
       note: { type: String, trim: true },
       course: { type: String, trim: true },
+      follow_up_date: { type: Date },
       reminder_sent: { type: Boolean, default: false }
     }
   ],
