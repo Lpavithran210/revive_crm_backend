@@ -57,6 +57,8 @@ cron.schedule('* * * * *', async () => {
                     });
 
                     followup.reminder_sent = true;
+                    updated = true;
+                    break;
                 }
             }
             if (updated) {

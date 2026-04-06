@@ -133,6 +133,8 @@ export const getEnquiries = async (req, res) => {
   }
 };
 
+import User from "../models/userModel.js";
+
 export const updateStudent = async (req, res) => {
     const studentId = req.params.id;
     const { name, status, attender, note, follow_up_date, course_fee, amount, payment_mode, course } = req.body;
@@ -143,6 +145,19 @@ export const updateStudent = async (req, res) => {
 
         if (!student) {
             return res.status(404).json({ message: "Student not found" });
+        }
+
+        // ✅ GET USER ID FROM ATTENDER NAME
+        let attenderId = student.attenderId;
+
+        if (attender) {
+            const user = await User.findOne({ name: attender });
+
+            if (user) {
+                attenderId = user._id;
+            } else {
+                return res.status(400).json({ message: "Attender user not found" });
+            }
         }
 
         // Follow up validation
@@ -162,12 +177,18 @@ export const updateStudent = async (req, res) => {
             }
         }
 
-        // Update main fields first
+        // ✅ UPDATE MAIN FIELDS
         if (name !== undefined) student.name = name;
         if (status) student.status = status;
-        if (attender) student.attender = attender;
+
+        if (attender) {
+            student.attender = attender;
+            student.attenderId = attenderId; // ✅ FIXED
+        }
+
         if (course) student.course = course;
-        // Add history entry
+
+        // ✅ HISTORY ENTRY
         const shouldUpdateHistory =
             status ||
             attender ||
@@ -183,14 +204,15 @@ export const updateStudent = async (req, res) => {
                 updated_at: new Date(),
                 status: student.status,
                 attender: student.attender,
+                attenderId: attenderId, // ✅ FIXED
                 note: note || "Lead updated",
                 follow_up_date: follow_up_date ? new Date(follow_up_date) : null,
-                course: student.course
+                course: student.course,
+                reminder_sent: false
             });
-
         }
 
-        // Payment handling
+        // ✅ PAYMENT LOGIC (unchanged)
         if (amount && payment_mode) {
 
             student.payments = student.payments || [];
@@ -221,7 +243,6 @@ export const updateStudent = async (req, res) => {
             else {
                 student.payment_status = "Unpaid";
             }
-
         }
 
         const updatedStudent = await student.save();
@@ -236,7 +257,6 @@ export const updateStudent = async (req, res) => {
             message: "Error updating student",
             error: error.message
         });
-
     }
 };
 
