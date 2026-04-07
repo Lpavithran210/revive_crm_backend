@@ -50,7 +50,7 @@ export const loginUser = async (req, res) => {
             throw new Error("Email not registered")
         }
         if (user && await bcrypt.compare(password, user.password)) {
-            res.json({ message: "User login successfull", data: {accessToken: generateToken(user._id, user.role), role: user.role, name: user.name}})
+            res.json({ message: "User login successfull", data: {accessToken: generateToken(user._id, user.role), _id: user._id, role: user.role, name: user.name}})
         } else {
             res.status(400)
             throw new Error("Invalid password")

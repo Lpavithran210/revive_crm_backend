@@ -1,5 +1,4 @@
 import moment from "moment-timezone";
-import { io } from "../index.js";
 import StudentModel from "../models/studentEnquiryModel.js";
 import { formatStudentToIST } from "../utils/time.js";
 
@@ -153,11 +152,17 @@ export const updateStudent = async (req, res) => {
         if (attender) {
             const user = await User.findOne({ name: attender });
 
-            if (user) {
-                attenderId = user._id;
-            } else {
+            if (!user) {
                 return res.status(400).json({ message: "Attender user not found" });
-            }
+            } 
+            attenderId = user._id;
+            student.attender = attender;
+            student.attenderId = attenderId;
+        }
+        if (!attenderId) {
+        return res.status(400).json({
+            message: "AttenderId missing. Cannot assign notification user."
+        });
         }
 
         // Follow up validation
@@ -180,11 +185,6 @@ export const updateStudent = async (req, res) => {
         // ✅ UPDATE MAIN FIELDS
         if (name !== undefined) student.name = name;
         if (status) student.status = status;
-
-        if (attender) {
-            student.attender = attender;
-            student.attenderId = attenderId; // ✅ FIXED
-        }
 
         if (course) student.course = course;
 
@@ -325,9 +325,6 @@ export const createStudent = async (req, res) => {
             payment_status,
             qualification
         });
-        console.log("New enquiry created:", formatStudentToIST(student));
-        io.emit("new-enquiry", formatStudentToIST(student));
-        console.log("Emitted new enquiry event for student:", formatStudentToIST(student));
         return res.status(201).json({
             message: "Student created successfully",
             student: formatStudentToIST(student)
