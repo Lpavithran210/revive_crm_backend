@@ -133,6 +133,7 @@ export const getEnquiries = async (req, res) => {
 };
 
 import User from "../models/userModel.js";
+import { getIO } from "../socket/socket.js";
 
 export const updateStudent = async (req, res) => {
     const studentId = req.params.id;
@@ -325,9 +326,14 @@ export const createStudent = async (req, res) => {
             payment_status,
             qualification
         });
+        
+        const formattedStudent = formatStudentToIST(student);
+        const io = getIO();
+        io.emit("newEnquiry", formattedStudent);
+
         return res.status(201).json({
             message: "Student created successfully",
-            student: formatStudentToIST(student)
+            student: formattedStudent
         });
 
     } catch (error) {
