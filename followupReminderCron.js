@@ -33,15 +33,15 @@ cron.schedule("* * * * *", async () => {
     console.log("📦 Students found:", students.length);
 
     for (const student of students) {
-      const validFollowups = student.history
-        .filter(f =>
-          f.follow_up_date &&
-          !f.reminder_sent &&
-          f.status === "Follow up"
-        )
-        .sort((a, b) => new Date(b.follow_up_date) - new Date(a.follow_up_date));
+      const followup = student.history.find(f => {
+        if (!f.follow_up_date) return false;
+        if (f.reminder_sent) return false;
+        if (f.status !== "Follow up") return false;
 
-      const followup = validFollowups[0];
+        const time = new Date(f.follow_up_date);
+
+        return time >= lowerBound && time < upperBound;
+        });
 
       if (!followup) continue;
 
