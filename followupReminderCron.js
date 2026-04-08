@@ -77,19 +77,14 @@ cron.schedule("* * * * *", async () => {
 
                 } else {
                     console.log("🔴 OFFLINE → saving");
-
                     await notificationModel.create({
-                        attenderId: attenderId, // ✅ correct field
+                        attenderId: attenderId,
                         data: payload,
                         read: false,
                     });
                 }
-
-                // ✅ mark EACH followup as sent
                 followup.reminder_sent = true;
             }
-
-            // ✅ save once per student
             await student.save();
         }
 
