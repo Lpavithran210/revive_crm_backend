@@ -70,18 +70,17 @@ cron.schedule("* * * * *", async () => {
                     attender: attenderName,
                 };
 
+                const notification = await notificationModel.create({
+                    attenderId,
+                    data: payload,
+                    read: false,
+                });
+
                 if (isUserOnline(attenderId)) {
                     console.log("🟢 ONLINE → emitting");
-
-                    io.to(attenderId).emit("followupReminder", payload);
-
+                    io.to(attenderId).emit("followupReminder", notification);
                 } else {
-                    console.log("🔴 OFFLINE → saving");
-                    await notificationModel.create({
-                        attenderId: attenderId,
-                        data: payload,
-                        read: false,
-                    });
+                    console.log("🔴 OFFLINE → stored in DB");
                 }
                 followup.reminder_sent = true;
             }

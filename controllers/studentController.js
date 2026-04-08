@@ -134,6 +134,7 @@ export const getEnquiries = async (req, res) => {
 
 import User from "../models/userModel.js";
 import { getIO } from "../socket/socket.js";
+import notificationModel from "../models/notificationModel.js";
 
 export const updateStudent = async (req, res) => {
     const studentId = req.params.id;
@@ -343,4 +344,28 @@ export const createStudent = async (req, res) => {
             message: "Failed to create student"
         });
     }
+};
+
+export const getNotifications = async (req, res) => {
+    try {
+        const notifications = await notificationModel
+            .find({ attenderId: req.user.id })
+            .sort({ createdAt: -1 })
+            .limit(30);
+        res.json(notifications);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching notifications" });
+    }
+};
+
+export const markNotificationsRead = async (req, res) => {
+  try {
+    await notificationModel.updateMany(
+      { attenderId: req.user.id, read: false },
+      { $set: { read: true } }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating notifications" });
+  }
 };

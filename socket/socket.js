@@ -28,26 +28,6 @@ export const initSocket = async (server) => {
       onlineUsers.get(roomId).add(socket.id);
 
       console.log("ONLINE USERS MAP:", onlineUsers);
-
-      // ✅ SEND MISSED
-      const missed = await notificationModel.find({
-        attenderId: roomId,
-        read: false,
-      });
-
-      console.log("Missed notifications:", missed.length);
-
-      if (missed.length > 0) {
-        socket.emit(
-          "bulkNotifications",
-          missed.map((n) => n.data)
-        );
-
-        await notificationModel.updateMany(
-          { attenderId: roomId, read: false },
-          { $set: { read: true } }
-        );
-      }
     });
 
     socket.on("disconnect", () => {
