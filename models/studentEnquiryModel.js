@@ -64,7 +64,7 @@ const studentEnquirySchema = new mongoose.Schema({
   payments: [
     {
       paid_amount: { type: Number, required: true },
-      payment_mode: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer'], required: true },
+      payment_mode: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer', "EMI"], required: true },
       payment_date: { type: Date, default: Date.now }
     }
   ],
