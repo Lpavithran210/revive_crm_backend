@@ -138,7 +138,7 @@ import notificationModel from "../models/notificationModel.js";
 
 export const updateStudent = async (req, res) => {
     const studentId = req.params.id;
-    const { name, status, attender, note, follow_up_date, course_fee, amount, payment_mode, course } = req.body;
+    const { name, status, attender, qualification, note, follow_up_date, course_fee, amount, payment_mode, course } = req.body;
 
     try {
 
@@ -187,7 +187,7 @@ export const updateStudent = async (req, res) => {
         // ✅ UPDATE MAIN FIELDS
         if (name !== undefined) student.name = name;
         if (status) student.status = status;
-
+        if (qualification !== undefined) student.qualification = qualification;
         if (course) student.course = course;
 
         // ✅ HISTORY ENTRY
