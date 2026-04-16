@@ -60,6 +60,14 @@ cron.schedule("* * * * *", async () => {
 
                 console.log("🎯 Sending to:", attenderId);
 
+                const lastFollowup = student.history
+                .filter(h =>
+                    h.status === "Follow up" &&
+                    h.updated_at &&
+                    new Date(h.updated_at) < now
+                )
+                .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0] || null;
+
                 const payload = {
                     name: student.name,
                     phone: student.phone,
@@ -68,6 +76,7 @@ cron.schedule("* * * * *", async () => {
                     note: followup.note,
                     attenderId,
                     attender: attenderName,
+                    lastFollowupDate: lastFollowup?.updated_at || null,
                 };
 
                 const notification = await notificationModel.create({
