@@ -102,7 +102,7 @@ export const getEnquiries = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-     const start = moment.tz(startDate, "Asia/Kolkata")
+    const start = moment.tz(startDate, "Asia/Kolkata")
         .startOf("day")
         .utc()
         .toDate();
@@ -112,19 +112,109 @@ export const getEnquiries = async (req, res) => {
         .utc()
         .toDate();
 
+    
     const enquiries = await StudentModel.find();
-    const filtered = enquiries.filter(student => {
-      if (!student.history || student.history.length === 0) return false;
-      const latestHistory = student.history.reduce((latest, current) => {
-        return new Date(current.updated_at) > new Date(latest.updated_at)
-          ? current
-          : latest;
+
+    let pending = 0;
+    let followUps = 0;
+    let loss = 0;
+    let success = 0;
+    let revenue = 0;
+
+    const sourceCounts = {};
+    const attenderCounts = {};
+    const courseStats = {};
+    const revenueByAttender = {};
+    const filteredStudents = [];
+
+    enquiries.forEach(student => {
+      if (!student.history || student.history.length === 0) return;
+
+      const historyInRange = student.history.filter(h => {
+        const date = new Date(h.updated_at);
+        return date >= start && date <= end;
       });
-      const latestDate = new Date(latestHistory.updated_at);
-      return latestDate >= start && latestDate <= end;
+
+      if (historyInRange.length === 0) return;
+
+      // ✅ LATEST STATUS
+      const latest = historyInRange.reduce((a, b) =>
+        new Date(a.updated_at) > new Date(b.updated_at) ? a : b
+      );
+
+      if (latest.status === "Pending") pending++;
+      else if (latest.status === "Loss") loss++;
+      else if (latest.status === "Success") success++;
+      else if (latest.status === "Follow up") followUps++;
+
+      // ✅ SOURCE COUNT
+      if (student.source) {
+        sourceCounts[student.source] =
+          (sourceCounts[student.source] || 0) + 1;
+      }
+
+      // ✅ ATTENDER COUNT
+      if (student.attender) {
+        attenderCounts[student.attender] =
+          (attenderCounts[student.attender] || 0) + 1;
+      }
+
+      // ✅ COURSE COUNT
+      if (student.course) {
+        const course = student.course.trim();
+        courseStats[course] = (courseStats[course] || 0) + 1;
+      }
+
+      // ✅ PAYMENTS + REVENUE
+      let studentRevenue = 0;
+
+        if (student.payments && student.payments.length > 0) {
+        student.payments.forEach(p => {
+            const rawDate = p.payment_date;
+
+            if (!rawDate) return;
+
+            const payDate = new Date(rawDate);
+
+            if (!isNaN(payDate) && payDate >= start && payDate <= end) {
+            const amount = Number(p.paid_amount) || 0;
+
+            revenue += amount;
+            studentRevenue += amount;
+            }
+        });
+        }
+
+      // ✅ REVENUE BY ATTENDER
+      const attenderName = student.attender ? student.attender.trim() : "unknown";
+
+        // Initialize
+        if (!revenueByAttender[attenderName]) {
+        revenueByAttender[attenderName] = 0;
+        }
+
+        // Add revenue (even if 0, keeps consistency)
+        revenueByAttender[attenderName] += studentRevenue;
+
+      filteredStudents.push(student);
     });
 
-    res.json(filtered);
+    res.json({
+      data: filteredStudents,
+      summary: {
+        pending,
+        followUps,
+        loss,
+        success,
+        revenue
+      },
+      analytics: {
+        sourceCounts,
+        attenderCounts,
+        courseStats,
+        revenueByAttender
+      }
+    });
 
   } catch (error) {
     console.error("Error fetching enquiries:", error);
