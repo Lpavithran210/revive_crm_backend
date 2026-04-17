@@ -1,10 +1,7 @@
 export const convertToIST = (date) => {
   if (!date) return null;
 
-  return new Date(date).toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    hour12: true
-  });
+  return new Date(date).toISOString();
 };
 
 export const formatStudentToIST = (student) => {
