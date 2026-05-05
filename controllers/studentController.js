@@ -385,12 +385,20 @@ export const createStudent = async (req, res) => {
             qualification = "Not Specified"
         } = req.body;
 
-
         if (!name || !phone || !course) {
             return res.status(400).json({
                 message: "Name, phone and course are required"
             });
         }
+
+        const courseMap = {
+            "testing": "Software Testing",
+            "software testing": "Software Testing",
+            "qa": "Software Testing",
+            "manual testing": "Software Testing"
+        };
+
+        const normalizedCourse = courseMap[course.trim().toLowerCase()] || course;
 
         const existingStudent = await StudentModel.findOne({ phone });
 
@@ -403,7 +411,7 @@ export const createStudent = async (req, res) => {
         const student = await StudentModel.create({
             name,
             phone,
-            course,
+            course: normalizedCourse,
             city,
             course_fee,
             source,
