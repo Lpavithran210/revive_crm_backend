@@ -17,6 +17,6 @@ router.post('/create-student', protect, authorizeRoles('admin'), createStudent)
 
 router.get('/enquiries', protect, getEnquiries)
 
-router.put('/student/:id', protect, updateStudent);
+router.put('/student/:id', protect, authorizeRoles('admin', 'counsellor'), updateStudent);
 
 export default router
