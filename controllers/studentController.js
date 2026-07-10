@@ -1,7 +1,6 @@
 import moment from "moment-timezone";
 import StudentModel from "../models/studentEnquiryModel.js";
 import { formatStudentToIST } from "../utils/time.js";
-import { assignCounsellor } from "../utils/assignCounsellor.js";
 
 const extractCourseName = (formName) => {
     if (!formName) return '';
@@ -187,7 +186,7 @@ export const getEnquiries = async (req, res) => {
         }
 
       // ✅ REVENUE BY ATTENDER
-      const attenderName = student.attender ? student.attender.trim() : "unknown";
+      const attenderName = student.attender ? student.attender.trim() : "";
 
         // Initialize
         if (!revenueByAttender[attenderName]) {
@@ -376,7 +375,7 @@ export const createStudent = async (req, res) => {
             course_fee = 0,
             source,
             status = "Pending",
-            attender,
+            attender = "Unassigned",
             follow_up_date,
             note,
             payments = [],
@@ -409,10 +408,6 @@ export const createStudent = async (req, res) => {
             });
         }
 
-        let assignedAttender = attender;
-        if (!assignedAttender || assignedAttender === "Unassigned") {
-            assignedAttender = await assignCounsellor();
-        }
 
         const student = await StudentModel.create({
             name,
@@ -422,7 +417,7 @@ export const createStudent = async (req, res) => {
             course_fee,
             source,
             status,
-            attender: assignedAttender,
+            attender,
             follow_up_date,
             note,
             payments,
