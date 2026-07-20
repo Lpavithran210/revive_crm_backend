@@ -36,6 +36,11 @@ const studentEnquirySchema = new mongoose.Schema({
     enum: ['Pending', 'Follow up', 'Loss', 'Success'],
     default: 'Pending'
   },
+  disposition: {
+    type: String,
+    enum: ['Not Contacted', 'RNR', 'Callback', 'Interested', 'Not Interested', 'Not Qualified', 'Demo Scheduled', 'Demo Completed', 'Visit'],
+    default: 'Not Contacted'
+  },
   attender: {
     type: String,
     default: "Unassigned"
@@ -69,6 +74,8 @@ const studentEnquirySchema = new mongoose.Schema({
     }
   ],
   course_fee: { type: Number },
+  concession_amount: { type: Number, default: 0 },
+  payable_fee: { type: Number, default: 0, },
   balance_amount: { type: Number },
   next_due_date: { type: Date },
   payment_status: {

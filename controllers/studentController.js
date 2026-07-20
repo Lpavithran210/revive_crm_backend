@@ -228,7 +228,7 @@ import notificationModel from "../models/notificationModel.js";
 
 export const updateStudent = async (req, res) => {
     const studentId = req.params.id;
-    const { name, status, attender, qualification, note, follow_up_date, course_fee, amount, payment_mode, course } = req.body;
+    const { name, status, disposition, attender, qualification, note, follow_up_date, course_fee, concession_amount, amount, payment_mode, course } = req.body;
 
     try {
 
@@ -277,12 +277,14 @@ export const updateStudent = async (req, res) => {
         // ✅ UPDATE MAIN FIELDS
         if (name !== undefined) student.name = name;
         if (status) student.status = status;
+        if (disposition) student.disposition = disposition;
         if (qualification !== undefined) student.qualification = qualification;
         if (course) student.course = course;
 
         // ✅ HISTORY ENTRY
         const shouldUpdateHistory =
             status ||
+            disposition ||
             attender ||
             note ||
             follow_up_date ||
@@ -295,6 +297,7 @@ export const updateStudent = async (req, res) => {
             student.history.push({
                 updated_at: new Date(),
                 status: student.status,
+                disposition: student.disposition,
                 attender: student.attender,
                 attenderId: attenderId, // ✅ FIXED
                 note: note || "Lead updated",
@@ -304,37 +307,47 @@ export const updateStudent = async (req, res) => {
             });
         }
 
-        // ✅ PAYMENT LOGIC (unchanged)
+         if (course_fee !== undefined) {
+            student.course_fee = Number(course_fee);
+        }
+
+        if (concession_amount !== undefined) {
+            student.concession_amount = Number(concession_amount);
+        }
+
+        // Update payable fee
+        student.payable_fee =
+            Number(student.course_fee || 0) -
+            Number(student.concession_amount || 0);
+
+        // Add new payment first
+        student.payments = student.payments || [];
+
         if (amount && payment_mode) {
-
-            student.payments = student.payments || [];
-
             student.payments.push({
                 paid_amount: Number(amount),
                 payment_mode,
                 payment_date: new Date()
             });
+        }
 
-            if (course_fee) {
-                student.course_fee = Number(course_fee);
-            }
+        // Now calculate totals
+        const totalPaid = student.payments.reduce(
+            (sum, payment) => sum + Number(payment.paid_amount || 0),
+            0
+        );
 
-            const totalPaid = student.payments.reduce(
-                (sum, payment) => sum + payment.paid_amount,
-                0
-            );
+        student.balance_amount = Math.max(
+            student.payable_fee - totalPaid,
+            0
+        );
 
-            student.balance_amount = Math.max(student.course_fee - totalPaid, 0);
-
-            if (student.balance_amount === 0) {
-                student.payment_status = "Fully Paid";
-            }
-            else if (totalPaid > 0) {
-                student.payment_status = "Partially Paid";
-            }
-            else {
-                student.payment_status = "Unpaid";
-            }
+        if (student.balance_amount === 0) {
+            student.payment_status = "Fully Paid";
+        } else if (totalPaid > 0) {
+            student.payment_status = "Partially Paid";
+        } else {
+            student.payment_status = "Unpaid";
         }
 
         const updatedStudent = await student.save();
@@ -373,8 +386,10 @@ export const createStudent = async (req, res) => {
             course,
             city,
             course_fee = 0,
+            concession_amount = 0,
             source,
             status = "Pending",
+            disposition = "Not Contacted",
             attender = "Unassigned",
             follow_up_date,
             note,
@@ -408,6 +423,7 @@ export const createStudent = async (req, res) => {
             });
         }
 
+        const payable_fee = Number(course_fee) - Number(concession_amount);
 
         const student = await StudentModel.create({
             name,
@@ -415,14 +431,17 @@ export const createStudent = async (req, res) => {
             course: normalizedCourse,
             city,
             course_fee,
+            concession_amount,
+            payable_fee,
             source,
             status,
+            disposition,
             attender,
             follow_up_date,
             note,
             payments,
             paid_amount,
-            balance_amount,
+            balance_amount: payable_fee,
             payment_status,
             qualification
         });
