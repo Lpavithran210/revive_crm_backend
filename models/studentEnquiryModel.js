@@ -38,7 +38,7 @@ const studentEnquirySchema = new mongoose.Schema({
   },
   disposition: {
     type: String,
-    enum: ['Not Contacted', 'RNR', 'Callback', 'Interested', 'Not Interested', 'Not Qualified', 'Demo Scheduled', 'Demo Completed', 'Visit'],
+    enum: ['Not Contacted', 'RNR', 'Callback', 'Interested', 'Not Interested', 'Not Qualified', 'Demo Scheduled', 'Demo Completed', 'Joined', 'Visit'],
     default: 'Not Contacted'
   },
   attender: {
