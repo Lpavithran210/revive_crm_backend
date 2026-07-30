@@ -228,7 +228,7 @@ import notificationModel from "../models/notificationModel.js";
 
 export const updateStudent = async (req, res) => {
     const studentId = req.params.id;
-    const { name, status, disposition, attender, qualification, note, follow_up_date, course_fee, concession_amount, amount, payment_mode, course } = req.body;
+    const { name,phone,city,source,learning_mode,qualification,status,disposition,attender,note,follow_up_date,course,course_fee,concession_amount,amount,payment_mode } = req.body;
 
     try {
 
@@ -280,6 +280,10 @@ export const updateStudent = async (req, res) => {
         if (disposition) student.disposition = disposition;
         if (qualification !== undefined) student.qualification = qualification;
         if (course) student.course = course;
+        if (phone !== undefined) student.phone = phone;
+        if (city !== undefined) student.city = city;
+        if (source !== undefined) student.source = source;
+        if (learning_mode !== undefined) student.learning_mode = learning_mode;
 
         // ✅ HISTORY ENTRY
         const shouldUpdateHistory =
@@ -336,7 +340,14 @@ export const updateStudent = async (req, res) => {
             (sum, payment) => sum + Number(payment.paid_amount || 0),
             0
         );
+        student.paid_amount = totalPaid;
+        if (note !== undefined) {
+            student.note = note;
+        }
 
+        if (follow_up_date !== undefined) {
+            student.follow_up_date = follow_up_date ? new Date(follow_up_date) : null;
+        }
         student.balance_amount = Math.max(
             student.payable_fee - totalPaid,
             0
